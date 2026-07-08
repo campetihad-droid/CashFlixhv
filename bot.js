@@ -72,12 +72,12 @@ function buildMessage(userId, amount, runTime, trackTime) {
 
 <b>🎁 Offer Name - PolicyBazar</b>
 
-<b>User Id :</b> ${userId}
-<b>User Amount :</b> ₹${amount}
-<b>🥳 User Payment :</b> Success
+<b>User Id : ${userId}</b>
+<b>User Amount : ₹${amount}</b>
+<b>🥳 User Payment : Success</b>
 
-<b>Run Time -</b> ${runTime}
-<b>Track Time -</b> ${trackTime}
+<b>Run Time - ${runTime}</b>
+<b>Track Time - ${trackTime}</b>
 
 <b>Powered By - CashFlix</b>`
   );
