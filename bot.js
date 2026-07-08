@@ -68,9 +68,9 @@ function generateRandomUserId() {
 // ✅ BOLD MESSAGE FORMAT - <b> HTML TAG SE BOLD
 function buildMessage(userId, amount, runTime, trackTime) {
   return (
-`<b>Test Conversation Count 💝</b>
+`<b>Conversation Count 💝</b>
 
-<b>🎁 Offer Name - Test</b>
+<b>🎁 Offer Name - PolicyBazar</b>
 
 <b>User Id :</b> ${userId}
 <b>User Amount :</b> ₹${amount}
