@@ -39,7 +39,7 @@ function getIndianTime(date) {
   return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
 }
 
-// ✅ USER ID GENERATE (TERA WALA - **** KE SATH)
+// ✅ USER ID GENERATE - **** KE SATH
 function generateRandomUserId() {
   const now = Date.now();
 
@@ -55,7 +55,9 @@ function generateRandomUserId() {
   }
 
   while (true) {
-    let uid = `${Math.floor(Math.random() * 4000 + 6000)}****${Math.floor(Math.random() * 9000 + 1000)}`;
+    let first4 = Math.floor(Math.random() * 4000 + 6000);
+    let last4 = Math.floor(Math.random() * 9000 + 1000);
+    let uid = `${first4}****${last4}`;
     if (!userLastUsed[uid]) {
       userLastUsed[uid] = now;
       return uid;
@@ -63,35 +65,34 @@ function generateRandomUserId() {
   }
 }
 
-// ✅ BOLD MESSAGE FORMAT (TERA HI FORMAT - SIRF BOLD ADD KIYA)
+// ✅ NORMAL MESSAGE FORMAT (BOLD HATAYA)
 function buildMessage(userId, amount, runTime, trackTime) {
   return (
-`*Test Conversation Count 💝*
+`Test Conversation Count 💝
 
-*🎁 Offer Name - Test*
+🎁 Offer Name - Test
 
 User Id : ${userId}
-*User Amount :* ₹${amount}
-*🥳 User Payment :* Success
+User Amount : ₹${amount}
+🥳 User Payment : Success
 
-*Run Time -* ${runTime}
-*Track Time -* ${trackTime}
+Run Time - ${runTime}
+Track Time - ${trackTime}
 
-*Powered By - CashFlix*`
+Powered By - CashFlix`
   );
 }
 
-// ✅ SECOND MESSAGE - RANDOM 1-2 MIN (FIXED)
+// ✅ SECOND MESSAGE - RANDOM 1-2 MIN
 function sendSecondMessage(userId, runTime) {
-  const randomDelay = Math.floor(Math.random() * 60000) + 60000; // 60-120 seconds
+  const randomDelay = Math.floor(Math.random() * 60000) + 60000;
 
   setTimeout(() => {
     if (!running) return;
     const trackTime = getIndianTime(new Date());
     bot.sendMessage(
       CHANNEL_ID,
-      buildMessage(userId, "5", runTime, trackTime),
-      { parse_mode: "Markdown" }
+      buildMessage(userId, "5", runTime, trackTime)
     ).catch(err => console.log("Second msg error:", err.message));
   }, randomDelay);
 }
@@ -111,7 +112,7 @@ function startConversation() {
       try {
         let userId = generateRandomUserId();
 
-        // Run Time - Random 1-2 Minute Pehle (60-120 sec)
+        // Run Time - Random 1-2 Minute Pehle
         const randomSeconds = Math.floor(Math.random() * 60) + 60;
         let runTimeDate = new Date(now.getTime() - (randomSeconds * 1000));
         let runTime = getIndianTime(runTimeDate);
@@ -121,8 +122,7 @@ function startConversation() {
 
         await bot.sendMessage(
           CHANNEL_ID,
-          buildMessage(userId, "0.1", runTime, trackTime),
-          { parse_mode: "Markdown" }
+          buildMessage(userId, "0.1", runTime, trackTime)
         );
         messageCount++;
         console.log(`✅ ₹0.1 message sent for ${userId}`);
@@ -138,7 +138,7 @@ function startConversation() {
         }
       }
     }
-  }, 60000); // 🔥 HAR 1 MINUTE
+  }, 60000);
 }
 
 // ===== COMMANDS =====
@@ -157,7 +157,7 @@ bot.onText(/\/test/, async (msg) => {
   running = true;
   messageCount = 0;
   startConversation();
-  bot.sendMessage(msg.chat.id, "✅ Started! 3 msgs/min | Bold | Indian Time");
+  bot.sendMessage(msg.chat.id, "✅ Started! 3 msgs/min | Indian Time");
 });
 
 bot.onText(/\/stop/, (msg) => {
@@ -188,4 +188,4 @@ app.listen(PORT, () => console.log(`🌐 Web server running on port ${PORT}`));
 console.log("🤖 Bot Started...");
 console.log(`📢 Channel: ${CHANNEL_ID}`);
 console.log(`🕐 Indian Time: ${getIndianTime(new Date())}`);
-console.log("✨ 3 msgs/min | Bold | **** User ID | Random Run Time");
+console.log("✨ 3 msgs/min | **** User ID | Normal Text");
