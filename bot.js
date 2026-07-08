@@ -65,21 +65,21 @@ function generateRandomUserId() {
   }
 }
 
-// ✅ NORMAL MESSAGE FORMAT (BOLD HATAYA)
+// ✅ BOLD MESSAGE FORMAT - <b> HTML TAG SE BOLD
 function buildMessage(userId, amount, runTime, trackTime) {
   return (
-`Test Conversation Count 💝
+`<b>Test Conversation Count 💝</b>
 
-🎁 Offer Name - Test
+<b>🎁 Offer Name - Test</b>
 
-User Id : ${userId}
-User Amount : ₹${amount}
-🥳 User Payment : Success
+<b>User Id :</b> ${userId}
+<b>User Amount :</b> ₹${amount}
+<b>🥳 User Payment :</b> Success
 
-Run Time - ${runTime}
-Track Time - ${trackTime}
+<b>Run Time -</b> ${runTime}
+<b>Track Time -</b> ${trackTime}
 
-Powered By - CashFlix`
+<b>Powered By - CashFlix</b>`
   );
 }
 
@@ -92,7 +92,8 @@ function sendSecondMessage(userId, runTime) {
     const trackTime = getIndianTime(new Date());
     bot.sendMessage(
       CHANNEL_ID,
-      buildMessage(userId, "5", runTime, trackTime)
+      buildMessage(userId, "5", runTime, trackTime),
+      { parse_mode: "HTML" }
     ).catch(err => console.log("Second msg error:", err.message));
   }, randomDelay);
 }
@@ -122,7 +123,8 @@ function startConversation() {
 
         await bot.sendMessage(
           CHANNEL_ID,
-          buildMessage(userId, "0.1", runTime, trackTime)
+          buildMessage(userId, "0.1", runTime, trackTime),
+          { parse_mode: "HTML" }
         );
         messageCount++;
         console.log(`✅ ₹0.1 message sent for ${userId}`);
@@ -157,7 +159,7 @@ bot.onText(/\/test/, async (msg) => {
   running = true;
   messageCount = 0;
   startConversation();
-  bot.sendMessage(msg.chat.id, "✅ Started! 3 msgs/min | Indian Time");
+  bot.sendMessage(msg.chat.id, "✅ Started! 3 msgs/min | Bold with <b>");
 });
 
 bot.onText(/\/stop/, (msg) => {
@@ -188,4 +190,4 @@ app.listen(PORT, () => console.log(`🌐 Web server running on port ${PORT}`));
 console.log("🤖 Bot Started...");
 console.log(`📢 Channel: ${CHANNEL_ID}`);
 console.log(`🕐 Indian Time: ${getIndianTime(new Date())}`);
-console.log("✨ 3 msgs/min | **** User ID | Normal Text");
+console.log("✨ 3 msgs/min | <b> Bold | **** User ID");
