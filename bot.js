@@ -20,7 +20,7 @@ const BOT1 = {
   messageCount2: 0,
   firstMsg: true,
   secondMsg: true,
-  messagesPerMinute: 3,
+  messagesPerMinute: 2,
 
   // 👇 YAHAN AMOUNT CHANGE KARO
   firstAmount: "0.1",   // First Message (₹0.1) - Jo chahe daalo
