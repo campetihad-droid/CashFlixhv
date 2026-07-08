@@ -70,7 +70,7 @@ function buildMessage(userId, amount, runTime, trackTime) {
 
 *🎁 Offer Name - Test*
 
-*User Id :* ${userId}
+User Id : ${userId}
 *User Amount :* ₹${amount}
 *🥳 User Payment :* Success
 
