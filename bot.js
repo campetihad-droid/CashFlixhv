@@ -2,7 +2,7 @@ require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const CHANNEL_ID = "-1003974352666";
+const CHANNEL_ID = "-1003924350648";
 const PORT = process.env.PORT || 3000;
 
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
@@ -65,12 +65,12 @@ function generateRandomUserId() {
   }
 }
 
-// ✅ BOLD MESSAGE FORMAT - <b> HTML TAG SE BOLD
+// ✅ MESSAGE FORMAT - <b> HTML TAG SE BOLD
 function buildMessage(userId, amount, runTime, trackTime) {
   return (
-`<b>Conversation Count 💝</b>
+`<b> Conversation Count 💝</b>
 
-<b>🎁 Offer Name - PolicyBazar</b>
+<b>🎁 Offer Name - Policybazar</b>
 
 <b>User Id : ${userId}</b>
 <b>User Amount : ₹${amount}</b>
@@ -98,8 +98,10 @@ function sendSecondMessage(userId, runTime) {
   }, randomDelay);
 }
 
-// ✅ MAIN SCHEDULER - PER MINUTE 3 MESSAGES
+// ✅ MAIN SCHEDULER - HAR MINUTE 3 MESSAGES WITH 10-15 SECOND GAP
 function startConversation() {
+  console.log("🚀 Started - 3 messages per minute with 10-15 sec gap");
+
   timer = setInterval(async () => {
     if (!running) {
       clearInterval(timer);
@@ -127,11 +129,14 @@ function startConversation() {
           { parse_mode: "HTML" }
         );
         messageCount++;
-        console.log(`✅ ₹0.1 message sent for ${userId}`);
+        console.log(`✅ ₹0.1 message ${i+1}/3 sent for ${userId}`);
 
         sendSecondMessage(userId, runTime);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // ✅ 10-15 SECOND GAP BETWEEN MESSAGES
+        const gap = Math.floor(Math.random() * 5000) + 10000; // 10,000ms to 15,000ms
+        console.log(`⏳ Waiting ${gap/1000} seconds before next message...`);
+        await new Promise(resolve => setTimeout(resolve, gap));
 
       } catch (error) {
         console.log("Error:", error.message);
@@ -140,7 +145,7 @@ function startConversation() {
         }
       }
     }
-  }, 60000);
+  }, 60000); // 🔥 HAR 1 MINUTE
 }
 
 // ===== COMMANDS =====
@@ -159,7 +164,7 @@ bot.onText(/\/test/, async (msg) => {
   running = true;
   messageCount = 0;
   startConversation();
-  bot.sendMessage(msg.chat.id, "✅ Started! 3 msgs/min | Bold with <b>");
+  bot.sendMessage(msg.chat.id, "✅ Started! 3 msgs/min with 10-15 sec gap");
 });
 
 bot.onText(/\/stop/, (msg) => {
@@ -190,4 +195,4 @@ app.listen(PORT, () => console.log(`🌐 Web server running on port ${PORT}`));
 console.log("🤖 Bot Started...");
 console.log(`📢 Channel: ${CHANNEL_ID}`);
 console.log(`🕐 Indian Time: ${getIndianTime(new Date())}`);
-console.log("✨ 3 msgs/min | <b> Bold | **** User ID");
+console.log("✨ 3 msgs/min | 10-15 sec gap | <b> Bold");
