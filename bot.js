@@ -3,6 +3,7 @@ const TelegramBot = require("node-telegram-bot-api");
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHANNEL_ID = "-1003924350648";
+const PORT = process.env.PORT || 3000;
 
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
@@ -11,7 +12,34 @@ let timer = null;
 let userLastUsed = {};
 let messageCount = 0;
 
-// Generate Random User ID
+// ✅ INDIAN TIME FORMATTER (BINA AM/PM)
+function getIndianTime(date) {
+  const d = date || new Date();
+  const options = {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  };
+  const formatter = new Intl.DateTimeFormat('en-IN', options);
+  const parts = formatter.formatToParts(d);
+  let day, month, year, hour, minute, second;
+  parts.forEach(part => {
+    if (part.type === 'day') day = part.value;
+    if (part.type === 'month') month = part.value;
+    if (part.type === 'year') year = part.value;
+    if (part.type === 'hour') hour = part.value;
+    if (part.type === 'minute') minute = part.value;
+    if (part.type === 'second') second = part.value;
+  });
+  return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+}
+
+// ✅ USER ID GENERATE (TERA WALA - **** KE SATH)
 function generateRandomUserId() {
   const now = Date.now();
 
@@ -35,35 +63,40 @@ function generateRandomUserId() {
   }
 }
 
-// Build Message - Aapka Format
+// ✅ BOLD MESSAGE FORMAT (TERA HI FORMAT - SIRF BOLD ADD KIYA)
 function buildMessage(userId, amount, runTime, trackTime) {
   return (
-`Test Conversation Count 💝
+`*Test Conversation Count 💝*
 
-🎁 Offer Name - Test
+*🎁 Offer Name - Test*
 
-User Id : ${userId}
-User Amount : ₹${amount}
-🥳 User Payment : Success
+*User Id :* ${userId}
+*User Amount :* ₹${amount}
+*🥳 User Payment :* Success
 
-Run Time - ${runTime}
-Track Time - ${trackTime}
+*Run Time -* ${runTime}
+*Track Time -* ${trackTime}
 
-Powered By - CashFlix`
+*Powered By - CashFlix*`
   );
 }
 
-// Second Message - 1 minute baad
+// ✅ SECOND MESSAGE - RANDOM 1-2 MIN (FIXED)
 function sendSecondMessage(userId, runTime) {
+  const randomDelay = Math.floor(Math.random() * 60000) + 60000; // 60-120 seconds
+
   setTimeout(() => {
+    if (!running) return;
+    const trackTime = getIndianTime(new Date());
     bot.sendMessage(
       CHANNEL_ID,
-      buildMessage(userId, "5", runTime, new Date().toLocaleString())
+      buildMessage(userId, "5", runTime, trackTime),
+      { parse_mode: "Markdown" }
     ).catch(err => console.log("Second msg error:", err.message));
-  }, 60000);
+  }, randomDelay);
 }
 
-// Main Scheduler
+// ✅ MAIN SCHEDULER - PER MINUTE 3 MESSAGES
 function startConversation() {
   timer = setInterval(async () => {
     if (!running) {
@@ -72,22 +105,31 @@ function startConversation() {
       return;
     }
 
-    for (let i = 0; i < 2; i++) {
+    const now = new Date();
+
+    for (let i = 0; i < 3; i++) {
       try {
-        let now = new Date();
         let userId = generateRandomUserId();
-        let runTime = new Date(now.getTime() - 60000).toLocaleString();
-        let trackTime = now.toLocaleString();
+
+        // Run Time - Random 1-2 Minute Pehle (60-120 sec)
+        const randomSeconds = Math.floor(Math.random() * 60) + 60;
+        let runTimeDate = new Date(now.getTime() - (randomSeconds * 1000));
+        let runTime = getIndianTime(runTimeDate);
+
+        // Track Time - Current Indian Time
+        let trackTime = getIndianTime(now);
 
         await bot.sendMessage(
           CHANNEL_ID,
-          buildMessage(userId, "0.1", runTime, trackTime)
+          buildMessage(userId, "0.1", runTime, trackTime),
+          { parse_mode: "Markdown" }
         );
         messageCount++;
-        console.log(`✅ Message ${messageCount} sent`);
+        console.log(`✅ ₹0.1 message sent for ${userId}`);
 
         sendSecondMessage(userId, runTime);
-        await new Promise(resolve => setTimeout(resolve, 500));
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {
         console.log("Error:", error.message);
@@ -96,10 +138,10 @@ function startConversation() {
         }
       }
     }
-  }, 3000);
+  }, 60000); // 🔥 HAR 1 MINUTE
 }
 
-// Commands
+// ===== COMMANDS =====
 bot.onText(/\/test/, async (msg) => {
   if (running) {
     return bot.sendMessage(msg.chat.id, "⚠️ Already running!");
@@ -115,7 +157,7 @@ bot.onText(/\/test/, async (msg) => {
   running = true;
   messageCount = 0;
   startConversation();
-  bot.sendMessage(msg.chat.id, "✅ Test Started.");
+  bot.sendMessage(msg.chat.id, "✅ Started! 3 msgs/min | Bold | Indian Time");
 });
 
 bot.onText(/\/stop/, (msg) => {
@@ -130,10 +172,20 @@ bot.onText(/\/stop/, (msg) => {
 bot.onText(/\/status/, (msg) => {
   bot.sendMessage(msg.chat.id, `
 📊 Status:
-Running: ${running ? "Yes" : "No"}
-Messages: ${messageCount}
+Running: ${running ? "✅ Yes" : "❌ No"}
+Total Messages: ${messageCount}
 Users: ${Object.keys(userLastUsed).length}
+Time: ${getIndianTime(new Date())}
   `);
 });
 
+// ===== PORT (RENDER KE LIYE) =====
+const express = require('express');
+const app = express();
+app.get('/', (req, res) => res.send('🤖 Bot is running!'));
+app.listen(PORT, () => console.log(`🌐 Web server running on port ${PORT}`));
+
 console.log("🤖 Bot Started...");
+console.log(`📢 Channel: ${CHANNEL_ID}`);
+console.log(`🕐 Indian Time: ${getIndianTime(new Date())}`);
+console.log("✨ 3 msgs/min | Bold | **** User ID | Random Run Time");
