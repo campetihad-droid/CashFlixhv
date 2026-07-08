@@ -12,7 +12,7 @@ let timer = null;
 let userLastUsed = {};
 let messageCount = 0;
 
-// ✅ USER ID - 4 digit****4 digit (FIXED)
+// ✅ USER ID - 4 digit****4 digit
 function generateRandomUserId() {
   const now = Date.now();
 
@@ -28,9 +28,7 @@ function generateRandomUserId() {
   }
 
   while (true) {
-    // ✅ FIRST 4 DIGITS (6000-9999)
     let first4 = Math.floor(Math.random() * 4000 + 6000);
-    // ✅ LAST 4 DIGITS (1000-9999)
     let last4 = Math.floor(Math.random() * 9000 + 1000);
     let uid = `${first4}****${last4}`;
     if (!userLastUsed[uid]) {
@@ -102,25 +100,21 @@ function formatTime(date) {
   return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
 }
 
-// ✅ SAB BOLD Message Format
+// ✅ SAB BOLD - No Extra Line Gaps
 function buildMessage(userId, amount, runTime, trackTime) {
   return (
-`*Conversation Count 💝*
-
-*🎁 Offer Name - PolicyBazar*
-
-*User Id : ${userId}*
-*User Amount : ₹${amount}*
-*🥳 User Payment : Success*
-
-*Run Time - ${runTime}*
-*Track Time - ${trackTime}*
-
+`* Conversation Count 💝*
+*🎁 Offer Name - Test*
+*User Id :* ${userId}
+*User Amount :* ₹${amount}
+*🥳 User Payment :* Success
+*Run Time -* ${runTime}
+*Track Time -* ${trackTime}
 *Powered By - CashFlix*`
   );
 }
 
-// ✅ Send Message Function
+// ✅ Send Message Function with BOLD
 async function sendMessageToChannel(userId, amount, runTime, trackTime) {
   try {
     await bot.sendMessage(
@@ -137,7 +131,7 @@ async function sendMessageToChannel(userId, amount, runTime, trackTime) {
   }
 }
 
-// ✅ Second Message
+// ✅ Second Message - Random 1-2 Minute
 async function sendSecondMessage(userId, runTime) {
   const randomDelay = Math.floor(Math.random() * 60000) + 60000;
   
@@ -162,9 +156,9 @@ async function sendSecondMessage(userId, runTime) {
   }, randomDelay);
 }
 
-// 🔥 MAIN FUNCTION
+// 🔥 MAIN FUNCTION - Run Time Random 1-2 Minute
 async function startConversation() {
-  console.log("🚀 Started - INDIAN REAL TIME");
+  console.log("🚀 Started - RUN TIME RANDOM 1-2 MIN + SAB BOLD + INDIAN TIME");
 
   timer = setInterval(async () => {
     if (!running) {
@@ -180,8 +174,12 @@ async function startConversation() {
       try {
         let userId = generateRandomUserId();
         
-        let runTimeDate = new Date(now.getTime() - 60000);
+        // ✅ RUN TIME - Random 1-2 Minute (60-120 seconds) pehle
+        const randomMinutes = Math.floor(Math.random() * 60) + 60; // 60 to 120 seconds
+        let runTimeDate = new Date(now.getTime() - (randomMinutes * 1000));
         let runTime = formatTime(runTimeDate);
+        
+        // ✅ Track Time - Current Time
         let trackTime = formatTime(now);
 
         await sendMessageToChannel(userId, "0.1", runTime, trackTime);
@@ -218,7 +216,7 @@ bot.onText(/\/test/, async (msg) => {
   running = true;
   messageCount = 0;
   startConversation();
-  bot.sendMessage(chatId, "✅ Started! INDIAN REAL TIME + USER ID FIXED");
+  bot.sendMessage(chatId, "✅ Started! RUN TIME RANDOM 1-2 MIN + SAB BOLD + USER ID FIXED + INDIAN TIME");
 });
 
 bot.onText(/\/stop/, (msg) => {
@@ -259,4 +257,4 @@ app.listen(PORT, () => {
 console.log("🤖 Bot Started...");
 console.log(`📢 Channel: ${CHANNEL_ID}`);
 console.log(`🕐 INDIAN REAL TIME: ${getIndianTime()}`);
-console.log("✨ USER ID FIXED: XXXX****XXXX");
+console.log("✨ RUN TIME RANDOM 1-2 MIN + SAB BOLD + USER ID FIXED");
