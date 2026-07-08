@@ -8,9 +8,13 @@ const PORT = process.env.PORT || 3000;
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
 let running = false;
+let running2 = false;
 let timer = null;
+let timer2 = null;
 let userLastUsed = {};
+let userLastUsed2 = {};
 let messageCount = 0;
+let messageCount2 = 0;
 
 // ✅ INDIAN TIME FORMATTER (BINA AM/PM)
 function getIndianTime(date) {
@@ -40,17 +44,18 @@ function getIndianTime(date) {
 }
 
 // ✅ USER ID GENERATE - **** KE SATH
-function generateRandomUserId() {
+function generateRandomUserId(userMap) {
   const now = Date.now();
+  const map = userMap || userLastUsed;
 
-  let repeatUsers = Object.keys(userLastUsed).filter(uid => {
-    let diff = (now - userLastUsed[uid]) / 1000;
+  let repeatUsers = Object.keys(map).filter(uid => {
+    let diff = (now - map[uid]) / 1000;
     return diff >= 300 && diff <= 600;
   });
 
   if (repeatUsers.length && Math.random() <= 0.4) {
     let uid = repeatUsers[Math.floor(Math.random() * repeatUsers.length)];
-    userLastUsed[uid] = now;
+    map[uid] = now;
     return uid;
   }
 
@@ -58,19 +63,37 @@ function generateRandomUserId() {
     let first4 = Math.floor(Math.random() * 4000 + 6000);
     let last4 = Math.floor(Math.random() * 9000 + 1000);
     let uid = `${first4}****${last4}`;
-    if (!userLastUsed[uid]) {
-      userLastUsed[uid] = now;
+    if (!map[uid]) {
+      map[uid] = now;
       return uid;
     }
   }
 }
 
-// ✅ MESSAGE FORMAT - <b> HTML TAG SE BOLD
-function buildMessage(userId, amount, runTime, trackTime) {
+// ✅ MESSAGE FORMAT 1 - Bot 1
+function buildMessage1(userId, amount, runTime, trackTime) {
   return (
-`<b>Conversation Count 💝</b>
+`<b>Test Conversation Count 💝</b>
 
-<b>🎁 Offer Name - Policybazar</b>
+<b>🎁 Offer Name - PolicyBazar</b>
+
+<b>User Id : ${userId}</b>
+<b>User Amount : ₹${amount}</b>
+<b>🥳 User Payment : Success</b>
+
+<b>Run Time - ${runTime}</b>
+<b>Track Time - ${trackTime}</b>
+
+<b>Powered By - CashFlix</b>`
+  );
+}
+
+// ✅ MESSAGE FORMAT 2 - Bot 2 (Offer Name Hataya, Uper New Offer Likha)
+function buildMessage2(userId, amount, runTime, trackTime) {
+  return (
+`<b>🔥 New Offer 💝</b>
+
+<b>🎁 Offer Name - Test</b>
 
 <b>User Id : ${userId}</b>
 <b>User Amount : ₹${amount}</b>
@@ -84,33 +107,28 @@ function buildMessage(userId, amount, runTime, trackTime) {
 }
 
 // ✅ SECOND MESSAGE - RANDOM 1-1.5 MINUTE (60-90 SECONDS)
-function sendSecondMessage(userId, runTime) {
-  // ✅ 60,000ms se 90,000ms (1 minute se 1.5 minute)
+function sendSecondMessage(userId, runTime, buildFunction, msgCounter, userMap, runningFlag) {
   const randomDelay = Math.floor(Math.random() * 30000) + 60000;
 
-  console.log(`⏳ Second message for ${userId} will send in ${Math.round(randomDelay/1000)} seconds`);
-
   setTimeout(() => {
-    if (!running) return;
+    if (!runningFlag()) return;
     const trackTime = getIndianTime(new Date());
     bot.sendMessage(
       CHANNEL_ID,
-      buildMessage(userId, "5", runTime, trackTime),
+      buildFunction(userId, "5", runTime, trackTime),
       { parse_mode: "HTML" }
     ).catch(err => console.log("Second msg error:", err.message));
   }, randomDelay);
 }
 
 // ✅ SEND MESSAGE FUNCTION
-async function sendMessage(userId, amount, runTime, trackTime) {
+async function sendMessage(userId, amount, runTime, trackTime, buildFunction) {
   try {
     await bot.sendMessage(
       CHANNEL_ID,
-      buildMessage(userId, amount, runTime, trackTime),
+      buildFunction(userId, amount, runTime, trackTime),
       { parse_mode: "HTML" }
     );
-    messageCount++;
-    console.log(`✅ ₹${amount} message sent for ${userId}`);
     return true;
   } catch (error) {
     console.log("Error:", error.message);
@@ -118,10 +136,16 @@ async function sendMessage(userId, amount, runTime, trackTime) {
   }
 }
 
-// ✅ MAIN SCHEDULER - HAR MINUTE 6 MESSAGES WITH 10 SECOND GAP
+// 🎯 =============================================
+// 🎯 🔥 YAHAN PER MINUTE MESSAGES COUNT CHANGE KARO
+// 🎯 =============================================
+const MESSAGES_PER_MINUTE = 4;  // 👈 Bot 1
+const MESSAGES_PER_MINUTE_2 = 3; // 👈 Bot 2
+// 🎯 =============================================
+
+// ✅ BOT 1 - START CONVERSATION (/test)
 function startConversation() {
-  console.log("🚀 Started - 6 messages per minute with 10 sec gap");
-  console.log("⏳ Second messages (₹5) will come randomly in 1-1.5 minutes");
+  console.log(`🚀 Bot 1 Started - ${MESSAGES_PER_MINUTE} messages per minute with 10 sec gap`);
 
   timer = setInterval(async () => {
     if (!running) {
@@ -132,24 +156,64 @@ function startConversation() {
 
     const now = new Date();
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < MESSAGES_PER_MINUTE; i++) {
       try {
-        let userId = generateRandomUserId();
+        let userId = generateRandomUserId(userLastUsed);
 
-        // Run Time - Random 1-2 Minute Pehle
         const randomSeconds = Math.floor(Math.random() * 60) + 60;
         let runTimeDate = new Date(now.getTime() - (randomSeconds * 1000));
         let runTime = getIndianTime(runTimeDate);
-
-        // Track Time - Current Indian Time
         let trackTime = getIndianTime(now);
 
-        await sendMessage(userId, "0.1", runTime, trackTime);
-        sendSecondMessage(userId, runTime);
+        await sendMessage(userId, "0.1", runTime, trackTime, buildMessage1);
+        messageCount++;
+        console.log(`✅ Bot1 ₹0.1 message ${i+1}/${MESSAGES_PER_MINUTE} sent for ${userId}`);
 
-        // ✅ EXACT 10 SECOND GAP
-        if (i < 5) {
-          console.log(`⏳ Waiting 10 seconds before next message...`);
+        sendSecondMessage(userId, runTime, buildMessage1, 'messageCount', userLastUsed, () => running);
+
+        if (i < MESSAGES_PER_MINUTE - 1) {
+          await new Promise(resolve => setTimeout(resolve, 10000));
+        }
+
+      } catch (error) {
+        console.log("Error:", error.message);
+        if (error.response?.body?.description?.includes('429')) {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
+    }
+  }, 60000);
+}
+
+// ✅ BOT 2 - START CONVERSATION (/test 2)
+function startConversation2() {
+  console.log(`🚀 Bot 2 Started - ${MESSAGES_PER_MINUTE_2} messages per minute with 10 sec gap`);
+
+  timer2 = setInterval(async () => {
+    if (!running2) {
+      clearInterval(timer2);
+      timer2 = null;
+      return;
+    }
+
+    const now = new Date();
+
+    for (let i = 0; i < MESSAGES_PER_MINUTE_2; i++) {
+      try {
+        let userId = generateRandomUserId(userLastUsed2);
+
+        const randomSeconds = Math.floor(Math.random() * 60) + 60;
+        let runTimeDate = new Date(now.getTime() - (randomSeconds * 1000));
+        let runTime = getIndianTime(runTimeDate);
+        let trackTime = getIndianTime(now);
+
+        await sendMessage(userId, "0.1", runTime, trackTime, buildMessage2);
+        messageCount2++;
+        console.log(`✅ Bot2 ₹0.1 message ${i+1}/${MESSAGES_PER_MINUTE_2} sent for ${userId}`);
+
+        sendSecondMessage(userId, runTime, buildMessage2, 'messageCount2', userLastUsed2, () => running2);
+
+        if (i < MESSAGES_PER_MINUTE_2 - 1) {
           await new Promise(resolve => setTimeout(resolve, 10000));
         }
 
@@ -164,40 +228,91 @@ function startConversation() {
 }
 
 // ===== COMMANDS =====
-bot.onText(/\/test/, async (msg) => {
+
+// ✅ /test - Bot 1 Start
+bot.onText(/\/test$/, async (msg) => {
+  const chatId = msg.chat.id;
+
   if (running) {
-    return bot.sendMessage(msg.chat.id, "⚠️ Already running!");
+    return bot.sendMessage(chatId, "⚠️ Bot 1 already running!");
   }
 
   try {
     const botInfo = await bot.getMe();
     await bot.getChatMember(CHANNEL_ID, botInfo.id);
   } catch (error) {
-    return bot.sendMessage(msg.chat.id, "❌ Bot is not admin in channel!");
+    return bot.sendMessage(chatId, "❌ Bot is not admin in channel!");
   }
 
   running = true;
   messageCount = 0;
   startConversation();
-  bot.sendMessage(msg.chat.id, "✅ Started! 6 msgs/min | ₹5 random 1-1.5 min");
+  bot.sendMessage(chatId, `✅ Bot 1 Started! ${MESSAGES_PER_MINUTE} msgs/min`);
 });
 
-bot.onText(/\/stop/, (msg) => {
+// ✅ /test 2 - Bot 2 Start
+bot.onText(/\/test 2/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (running2) {
+    return bot.sendMessage(chatId, "⚠️ Bot 2 already running!");
+  }
+
+  try {
+    const botInfo = await bot.getMe();
+    await bot.getChatMember(CHANNEL_ID, botInfo.id);
+  } catch (error) {
+    return bot.sendMessage(chatId, "❌ Bot is not admin in channel!");
+  }
+
+  running2 = true;
+  messageCount2 = 0;
+  startConversation2();
+  bot.sendMessage(chatId, `✅ Bot 2 Started! ${MESSAGES_PER_MINUTE_2} msgs/min`);
+});
+
+// ✅ /stop - Bot 1 Stop
+bot.onText(/\/stop$/, (msg) => {
+  const chatId = msg.chat.id;
+
   running = false;
   if (timer) {
     clearInterval(timer);
     timer = null;
   }
-  bot.sendMessage(msg.chat.id, `🛑 Stopped. Total: ${messageCount}`);
+  bot.sendMessage(chatId, `🛑 Bot 1 Stopped. Total: ${messageCount}`);
 });
 
+// ✅ /stop 2 - Bot 2 Stop
+bot.onText(/\/stop 2/, (msg) => {
+  const chatId = msg.chat.id;
+
+  running2 = false;
+  if (timer2) {
+    clearInterval(timer2);
+    timer2 = null;
+  }
+  bot.sendMessage(chatId, `🛑 Bot 2 Stopped. Total: ${messageCount2}`);
+});
+
+// ✅ /status - Full Status
 bot.onText(/\/status/, (msg) => {
   bot.sendMessage(msg.chat.id, `
-📊 Status:
+📊 Full Status:
+
+🤖 Bot 1:
 Running: ${running ? "✅ Yes" : "❌ No"}
-Total Messages: ${messageCount}
-Users: ${Object.keys(userLastUsed).length}
-Time: ${getIndianTime(new Date())}
+Messages: ${messageCount}
+Speed: ${MESSAGES_PER_MINUTE} msgs/min
+
+🤖 Bot 2:
+Running: ${running2 ? "✅ Yes" : "❌ No"}
+Messages: ${messageCount2}
+Speed: ${MESSAGES_PER_MINUTE_2} msgs/min
+
+👥 Users Bot1: ${Object.keys(userLastUsed).length}
+👥 Users Bot2: ${Object.keys(userLastUsed2).length}
+🕐 Time: ${getIndianTime(new Date())}
   `);
 });
 
@@ -210,4 +325,4 @@ app.listen(PORT, () => console.log(`🌐 Web server running on port ${PORT}`));
 console.log("🤖 Bot Started...");
 console.log(`📢 Channel: ${CHANNEL_ID}`);
 console.log(`🕐 Indian Time: ${getIndianTime(new Date())}`);
-console.log("✨ 6 msgs/min | 10 sec gap | ₹5 random 1-1.5 min");
+console.log(`✨ Bot1: ${MESSAGES_PER_MINUTE} msgs/min | Bot2: ${MESSAGES_PER_MINUTE_2} msgs/min`);
