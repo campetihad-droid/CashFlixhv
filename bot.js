@@ -68,7 +68,7 @@ function generateRandomUserId() {
 // ✅ MESSAGE FORMAT - <b> HTML TAG SE BOLD
 function buildMessage(userId, amount, runTime, trackTime) {
   return (
-`<b> Conversation Count 💝</b>
+`<b>Conversation Count 💝</b>
 
 <b>🎁 Offer Name - Policybazar</b>
 
@@ -83,9 +83,12 @@ function buildMessage(userId, amount, runTime, trackTime) {
   );
 }
 
-// ✅ SECOND MESSAGE - RANDOM 1-2 MIN
+// ✅ SECOND MESSAGE - RANDOM 1-1.5 MINUTE (60-90 SECONDS)
 function sendSecondMessage(userId, runTime) {
-  const randomDelay = Math.floor(Math.random() * 60000) + 60000;
+  // ✅ 60,000ms se 90,000ms (1 minute se 1.5 minute)
+  const randomDelay = Math.floor(Math.random() * 30000) + 60000;
+
+  console.log(`⏳ Second message for ${userId} will send in ${Math.round(randomDelay/1000)} seconds`);
 
   setTimeout(() => {
     if (!running) return;
@@ -98,9 +101,27 @@ function sendSecondMessage(userId, runTime) {
   }, randomDelay);
 }
 
-// ✅ MAIN SCHEDULER - HAR MINUTE 3 MESSAGES WITH 10-15 SECOND GAP
+// ✅ SEND MESSAGE FUNCTION
+async function sendMessage(userId, amount, runTime, trackTime) {
+  try {
+    await bot.sendMessage(
+      CHANNEL_ID,
+      buildMessage(userId, amount, runTime, trackTime),
+      { parse_mode: "HTML" }
+    );
+    messageCount++;
+    console.log(`✅ ₹${amount} message sent for ${userId}`);
+    return true;
+  } catch (error) {
+    console.log("Error:", error.message);
+    return false;
+  }
+}
+
+// ✅ MAIN SCHEDULER - HAR MINUTE 6 MESSAGES WITH 10 SECOND GAP
 function startConversation() {
-  console.log("🚀 Started - 3 messages per minute with 10-15 sec gap");
+  console.log("🚀 Started - 6 messages per minute with 10 sec gap");
+  console.log("⏳ Second messages (₹5) will come randomly in 1-1.5 minutes");
 
   timer = setInterval(async () => {
     if (!running) {
@@ -111,7 +132,7 @@ function startConversation() {
 
     const now = new Date();
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 6; i++) {
       try {
         let userId = generateRandomUserId();
 
@@ -123,20 +144,14 @@ function startConversation() {
         // Track Time - Current Indian Time
         let trackTime = getIndianTime(now);
 
-        await bot.sendMessage(
-          CHANNEL_ID,
-          buildMessage(userId, "0.1", runTime, trackTime),
-          { parse_mode: "HTML" }
-        );
-        messageCount++;
-        console.log(`✅ ₹0.1 message ${i+1}/3 sent for ${userId}`);
-
+        await sendMessage(userId, "0.1", runTime, trackTime);
         sendSecondMessage(userId, runTime);
 
-        // ✅ 10-15 SECOND GAP BETWEEN MESSAGES
-        const gap = Math.floor(Math.random() * 5000) + 10000; // 10,000ms to 15,000ms
-        console.log(`⏳ Waiting ${gap/1000} seconds before next message...`);
-        await new Promise(resolve => setTimeout(resolve, gap));
+        // ✅ EXACT 10 SECOND GAP
+        if (i < 5) {
+          console.log(`⏳ Waiting 10 seconds before next message...`);
+          await new Promise(resolve => setTimeout(resolve, 10000));
+        }
 
       } catch (error) {
         console.log("Error:", error.message);
@@ -145,7 +160,7 @@ function startConversation() {
         }
       }
     }
-  }, 60000); // 🔥 HAR 1 MINUTE
+  }, 60000);
 }
 
 // ===== COMMANDS =====
@@ -164,7 +179,7 @@ bot.onText(/\/test/, async (msg) => {
   running = true;
   messageCount = 0;
   startConversation();
-  bot.sendMessage(msg.chat.id, "✅ Started! 3 msgs/min with 10-15 sec gap");
+  bot.sendMessage(msg.chat.id, "✅ Started! 6 msgs/min | ₹5 random 1-1.5 min");
 });
 
 bot.onText(/\/stop/, (msg) => {
@@ -195,4 +210,4 @@ app.listen(PORT, () => console.log(`🌐 Web server running on port ${PORT}`));
 console.log("🤖 Bot Started...");
 console.log(`📢 Channel: ${CHANNEL_ID}`);
 console.log(`🕐 Indian Time: ${getIndianTime(new Date())}`);
-console.log("✨ 3 msgs/min | 10-15 sec gap | <b> Bold");
+console.log("✨ 6 msgs/min | 10 sec gap | ₹5 random 1-1.5 min");
