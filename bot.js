@@ -24,7 +24,7 @@ const BOT1 = {
 
   // 👇 YAHAN AMOUNT CHANGE KARO
   firstAmount: "0.1",   // First Message (₹0.1) - Jo chahe daalo
-  secondAmount: "5"     // Second Message (₹5) - Jo chahe daalo
+  secondAmount: "6"     // Second Message (₹5) - Jo chahe daalo
 };
 
 // 🔥 BOT 2 SETTINGS (JO /test 2 SE CHALTA HAI)
