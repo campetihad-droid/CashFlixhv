@@ -20,11 +20,11 @@ const BOT1 = {
   messageCount2: 0,
   firstMsg: true,
   secondMsg: true,
-  messagesPerMinute: 6,
+  messagesPerMinute: 2,
 
   // 👇 AMOUNT SETTINGS
   firstAmount: "0.1",
-  secondAmount: "5",
+  secondAmount: "6",
 
   // 👇 TIME SETTINGS
   runTimeGapMin: 60,    // Run Time Minimum Gap (seconds)
@@ -46,7 +46,7 @@ const BOT2 = {
   messageCount2: 0,
   firstMsg: true,
   secondMsg: true,
-  messagesPerMinute: 3,
+  messagesPerMinute: 50,
 
   // 👇 AMOUNT SETTINGS
   firstAmount: "0.1",
@@ -124,16 +124,16 @@ function generateRandomUserId(userMap, settings) {
 // ✅ MESSAGE FORMAT 1 - Bot 1
 function buildMessage1(userId, amount, runTime, trackTime) {
   return (
-`<b>Test Conversation Count 💝</b>
+`<b>Conversation Count 💝</b>
 
-<b>🎁 Offer Name - Test</b>
+<b>🎁 Offer Name - PolicyBazar</b>
 
-<b>User Id :</b> ${userId}
-<b>User Amount :</b> 💰 <b>₹${amount}</b>
-<b>🥳 User Payment :</b> Success ✅
+<b>User Id : ${userId}</b>
+<b>User Amount : ₹${amount}</b>
+<b>🥳 User Payment : Success</b>
 
-<b>Run Time -</b> ${runTime}
-<b>Track Time -</b> ${trackTime}
+<b>Run Time - ${runTime}</b>
+<b>Track Time - ${trackTime}</b>
 
 <b>Powered By - CashFlix</b>`
   );
