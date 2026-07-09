@@ -2,13 +2,13 @@ require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const CHANNEL_ID = "-1003974352666";
+const CHANNEL_ID = "-1003924350648";
 const PORT = process.env.PORT || 3000;
 
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
 // ============================================================
-// 🎯 AMOUNT SETTINGS - YAHAN CHANGE KARO 🎯
+// 🎯 SETTINGS - YAHAN SAB CHANGE KARO 🎯
 // ============================================================
 
 // 🔥 BOT 1 SETTINGS (JO /test SE CHALTA HAI)
@@ -20,11 +20,21 @@ const BOT1 = {
   messageCount2: 0,
   firstMsg: true,
   secondMsg: true,
-  messagesPerMinute: 1,
+  messagesPerMinute: 6,
 
-  // 👇 YAHAN AMOUNT CHANGE KARO
-  firstAmount: "0.1",   // First Message (₹0.1) - Jo chahe daalo
-  secondAmount: "6"     // Second Message (₹5) - Jo chahe daalo
+  // 👇 AMOUNT SETTINGS
+  firstAmount: "0.1",
+  secondAmount: "5",
+
+  // 👇 TIME SETTINGS
+  runTimeGapMin: 60,    // Run Time Minimum Gap (seconds)
+  runTimeGapMax: 120,   // Run Time Maximum Gap (seconds)
+  secondMsgDelayMin: 60, // Second Message Minimum Delay (seconds)
+  secondMsgDelayMax: 90, // Second Message Maximum Delay (seconds)
+
+  // 👇 USER ID REPEAT SETTINGS - YAHAN CHANGE KARO
+  repeatTimeMin: 300,   // Minimum Repeat Time (seconds) = 5 Minutes
+  repeatTimeMax: 360    // Maximum Repeat Time (seconds) = 6 Minutes
 };
 
 // 🔥 BOT 2 SETTINGS (JO /test 2 SE CHALTA HAI)
@@ -38,9 +48,19 @@ const BOT2 = {
   secondMsg: true,
   messagesPerMinute: 3,
 
-  // 👇 YAHAN AMOUNT CHANGE KARO
-  firstAmount: "0.1",   // First Message (₹0.1) - Jo chahe daalo
-  secondAmount: "5"     // Second Message (₹5) - Jo chahe daalo
+  // 👇 AMOUNT SETTINGS
+  firstAmount: "0.1",
+  secondAmount: "5",
+
+  // 👇 TIME SETTINGS
+  runTimeGapMin: 60,
+  runTimeGapMax: 120,
+  secondMsgDelayMin: 60,
+  secondMsgDelayMax: 90,
+
+  // 👇 USER ID REPEAT SETTINGS - YAHAN CHANGE KARO
+  repeatTimeMin: 300,   // Minimum Repeat Time (seconds) = 5 Minutes
+  repeatTimeMax: 360    // Maximum Repeat Time (seconds) = 6 Minutes
 };
 
 // ============================================================
@@ -71,21 +91,25 @@ function getIndianTime(date) {
   return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
 }
 
-function generateRandomUserId(userMap) {
+// ✅ USER ID GENERATE - 5-6 MINUTE BAAD REPEAT
+function generateRandomUserId(userMap, settings) {
   const now = Date.now();
   const map = userMap;
 
+  // ✅ Check karo kaunse users 5-6 minute pehle use hue hain
   let repeatUsers = Object.keys(map).filter(uid => {
     let diff = (now - map[uid]) / 1000;
-    return diff >= 300 && diff <= 600;
+    return diff >= settings.repeatTimeMin && diff <= settings.repeatTimeMax;
   });
 
+  // ✅ 40% chance repeat user select karne ka
   if (repeatUsers.length && Math.random() <= 0.4) {
     let uid = repeatUsers[Math.floor(Math.random() * repeatUsers.length)];
     map[uid] = now;
     return uid;
   }
 
+  // ✅ Naya user generate karo
   while (true) {
     let first4 = Math.floor(Math.random() * 4000 + 6000);
     let last4 = Math.floor(Math.random() * 9000 + 1000);
@@ -100,16 +124,16 @@ function generateRandomUserId(userMap) {
 // ✅ MESSAGE FORMAT 1 - Bot 1
 function buildMessage1(userId, amount, runTime, trackTime) {
   return (
-`<b>Conversation Count 💝</b>
+`<b>Test Conversation Count 💝</b>
 
-<b>🎁 Offer Name - PolicyBazar</b>
+<b>🎁 Offer Name - Test</b>
 
-<b>User Id : ${userId}</b>
-<b>User Amount : ₹${amount}</b>
-<b>🥳 User Payment : Success</b>
+<b>User Id :</b> ${userId}
+<b>User Amount :</b> 💰 <b>₹${amount}</b>
+<b>🥳 User Payment :</b> Success ✅
 
-<b>Run Time - ${runTime}</b>
-<b>Track Time - ${trackTime}</b>
+<b>Run Time -</b> ${runTime}
+<b>Track Time -</b> ${trackTime}
 
 <b>Powered By - CashFlix</b>`
   );
@@ -135,7 +159,7 @@ function buildMessage2(userId, amount, runTime, trackTime) {
 
 // ✅ SECOND MESSAGE
 function sendSecondMessage(userId, runTime, buildFunction, settings, botName) {
-  const randomDelay = Math.floor(Math.random() * 30000) + 60000;
+  const randomDelay = Math.floor(Math.random() * (settings.secondMsgDelayMax - settings.secondMsgDelayMin + 1)) + settings.secondMsgDelayMin;
 
   setTimeout(() => {
     if (!settings.running || !settings.secondMsg) {
@@ -145,10 +169,10 @@ function sendSecondMessage(userId, runTime, buildFunction, settings, botName) {
     const trackTime = getIndianTime(new Date());
     bot.sendMessage(
       CHANNEL_ID,
-      buildFunction(userId, settings.secondAmount, runTime, trackTime), // ✅ SECOND AMOUNT
+      buildFunction(userId, settings.secondAmount, runTime, trackTime),
       { parse_mode: "HTML" }
     ).catch(err => console.log("Second msg error:", err.message));
-  }, randomDelay);
+  }, randomDelay * 1000);
 }
 
 // ✅ SEND FIRST MESSAGE
@@ -177,6 +201,9 @@ async function sendFirstMessage(userId, amount, runTime, trackTime, buildFunctio
 function startConversation1() {
   console.log(`🚀 Bot 1 Started - ${BOT1.messagesPerMinute} msgs/min`);
   console.log(`   First Amount: ₹${BOT1.firstAmount} | Second Amount: ₹${BOT1.secondAmount}`);
+  console.log(`   Run Time Gap: ${BOT1.runTimeGapMin}-${BOT1.runTimeGapMax} sec`);
+  console.log(`   Second Msg Delay: ${BOT1.secondMsgDelayMin}-${BOT1.secondMsgDelayMax} sec`);
+  console.log(`   User Repeat: ${BOT1.repeatTimeMin/60}-${BOT1.repeatTimeMax/60} minutes`);
 
   BOT1.timer = setInterval(async () => {
     if (!BOT1.running) {
@@ -189,14 +216,14 @@ function startConversation1() {
 
     for (let i = 0; i < BOT1.messagesPerMinute; i++) {
       try {
-        let userId = generateRandomUserId(BOT1.userLastUsed);
+        // ✅ USER ID GENERATE - REPEAT SETTINGS KE SATH
+        let userId = generateRandomUserId(BOT1.userLastUsed, BOT1);
 
-        const randomSeconds = Math.floor(Math.random() * 60) + 60;
+        const randomSeconds = Math.floor(Math.random() * (BOT1.runTimeGapMax - BOT1.runTimeGapMin + 1)) + BOT1.runTimeGapMin;
         let runTimeDate = new Date(now.getTime() - (randomSeconds * 1000));
         let runTime = getIndianTime(runTimeDate);
         let trackTime = getIndianTime(now);
 
-        // ✅ FIRST AMOUNT USE HO RAHA HAI
         await sendFirstMessage(userId, BOT1.firstAmount, runTime, trackTime, buildMessage1, BOT1, "Bot1");
 
         if (BOT1.secondMsg) {
@@ -221,6 +248,9 @@ function startConversation1() {
 function startConversation2() {
   console.log(`🚀 Bot 2 Started - ${BOT2.messagesPerMinute} msgs/min`);
   console.log(`   First Amount: ₹${BOT2.firstAmount} | Second Amount: ₹${BOT2.secondAmount}`);
+  console.log(`   Run Time Gap: ${BOT2.runTimeGapMin}-${BOT2.runTimeGapMax} sec`);
+  console.log(`   Second Msg Delay: ${BOT2.secondMsgDelayMin}-${BOT2.secondMsgDelayMax} sec`);
+  console.log(`   User Repeat: ${BOT2.repeatTimeMin/60}-${BOT2.repeatTimeMax/60} minutes`);
 
   BOT2.timer = setInterval(async () => {
     if (!BOT2.running) {
@@ -233,14 +263,14 @@ function startConversation2() {
 
     for (let i = 0; i < BOT2.messagesPerMinute; i++) {
       try {
-        let userId = generateRandomUserId(BOT2.userLastUsed);
+        // ✅ USER ID GENERATE - REPEAT SETTINGS KE SATH
+        let userId = generateRandomUserId(BOT2.userLastUsed, BOT2);
 
-        const randomSeconds = Math.floor(Math.random() * 60) + 60;
+        const randomSeconds = Math.floor(Math.random() * (BOT2.runTimeGapMax - BOT2.runTimeGapMin + 1)) + BOT2.runTimeGapMin;
         let runTimeDate = new Date(now.getTime() - (randomSeconds * 1000));
         let runTime = getIndianTime(runTimeDate);
         let trackTime = getIndianTime(now);
 
-        // ✅ FIRST AMOUNT USE HO RAHA HAI
         await sendFirstMessage(userId, BOT2.firstAmount, runTime, trackTime, buildMessage2, BOT2, "Bot2");
 
         if (BOT2.secondMsg) {
@@ -275,10 +305,14 @@ bot.onText(/\/test$/, async (msg) => {
 
   BOT1.running = true;
   BOT1.messageCount = 0;
+  BOT1.userLastUsed = {};
   startConversation1();
   bot.sendMessage(chatId, `✅ Bot 1 Started!
 📌 First Amount: ₹${BOT1.firstAmount}
 📌 Second Amount: ₹${BOT1.secondAmount}
+📌 Run Time Gap: ${BOT1.runTimeGapMin}-${BOT1.runTimeGapMax} sec
+📌 Second Msg Delay: ${BOT1.secondMsgDelayMin}-${BOT1.secondMsgDelayMax} sec
+📌 User Repeat: ${BOT1.repeatTimeMin/60}-${BOT1.repeatTimeMax/60} min
 📌 Speed: ${BOT1.messagesPerMinute} msgs/min`);
 });
 
@@ -295,10 +329,14 @@ bot.onText(/\/test 2/, async (msg) => {
 
   BOT2.running = true;
   BOT2.messageCount = 0;
+  BOT2.userLastUsed = {};
   startConversation2();
   bot.sendMessage(chatId, `✅ Bot 2 Started!
 📌 First Amount: ₹${BOT2.firstAmount}
 📌 Second Amount: ₹${BOT2.secondAmount}
+📌 Run Time Gap: ${BOT2.runTimeGapMin}-${BOT2.runTimeGapMax} sec
+📌 Second Msg Delay: ${BOT2.secondMsgDelayMin}-${BOT2.secondMsgDelayMax} sec
+📌 User Repeat: ${BOT2.repeatTimeMin/60}-${BOT2.repeatTimeMax/60} min
 📌 Speed: ${BOT2.messagesPerMinute} msgs/min`);
 });
 
@@ -324,6 +362,9 @@ bot.onText(/\/status/, (msg) => {
 Running: ${BOT1.running ? "✅ Yes" : "❌ No"}
 First Amount: ₹${BOT1.firstAmount}
 Second Amount: ₹${BOT1.secondAmount}
+Run Time Gap: ${BOT1.runTimeGapMin}-${BOT1.runTimeGapMax} sec
+Second Msg Delay: ${BOT1.secondMsgDelayMin}-${BOT1.secondMsgDelayMax} sec
+User Repeat: ${BOT1.repeatTimeMin/60}-${BOT1.repeatTimeMax/60} min
 Total Messages: ${BOT1.messageCount}
 Speed: ${BOT1.messagesPerMinute} msgs/min
 
@@ -331,6 +372,9 @@ Speed: ${BOT1.messagesPerMinute} msgs/min
 Running: ${BOT2.running ? "✅ Yes" : "❌ No"}
 First Amount: ₹${BOT2.firstAmount}
 Second Amount: ₹${BOT2.secondAmount}
+Run Time Gap: ${BOT2.runTimeGapMin}-${BOT2.runTimeGapMax} sec
+Second Msg Delay: ${BOT2.secondMsgDelayMin}-${BOT2.secondMsgDelayMax} sec
+User Repeat: ${BOT2.repeatTimeMin/60}-${BOT2.repeatTimeMax/60} min
 Total Messages: ${BOT2.messageCount}
 Speed: ${BOT2.messagesPerMinute} msgs/min
 
@@ -349,7 +393,11 @@ console.log("🤖 Bot Started...");
 console.log(`📢 Channel: ${CHANNEL_ID}`);
 console.log(`🕐 Indian Time: ${getIndianTime(new Date())}`);
 console.log(`
-📌 AMOUNT SETTINGS:
+📌 ALL SETTINGS:
   Bot 1: First=₹${BOT1.firstAmount} | Second=₹${BOT1.secondAmount}
+         Run Gap=${BOT1.runTimeGapMin}-${BOT1.runTimeGapMax}s | Delay=${BOT1.secondMsgDelayMin}-${BOT1.secondMsgDelayMax}s
+         Repeat=${BOT1.repeatTimeMin/60}-${BOT1.repeatTimeMax/60} min
   Bot 2: First=₹${BOT2.firstAmount} | Second=₹${BOT2.secondAmount}
+         Run Gap=${BOT2.runTimeGapMin}-${BOT2.runTimeGapMax}s | Delay=${BOT2.secondMsgDelayMin}-${BOT2.secondMsgDelayMax}s
+         Repeat=${BOT2.repeatTimeMin/60}-${BOT2.repeatTimeMax/60} min
 `);
