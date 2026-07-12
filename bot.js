@@ -19,12 +19,12 @@ const BOT1 = {
   messageCount: 0,
   messageCount2: 0,
   firstMsg: true,
-  secondMsg: false,
+  secondMsg: true,
   messagesPerMinute: 2,
 
   // 👇 AMOUNT SETTINGS
-  firstAmount: "3",
-  secondAmount: "0",
+  firstAmount: "0.1",
+  secondAmount: "6",
 
   // 👇 TIME SETTINGS
   runTimeGapMin: 60,    // Run Time Minimum Gap (seconds)
@@ -126,7 +126,7 @@ function buildMessage1(userId, amount, runTime, trackTime) {
   return (
 `<b>Conversation Count 💝</b>
 
-<b>🎁 Offer Name - Waves</b>
+<b>🎁 Offer Name - PolicyBazar</b>
 
 <b>User Id : ${userId}</b>
 <b>User Amount : ₹${amount}</b>
