@@ -20,7 +20,7 @@ const BOT1 = {
   messageCount2: 0,
   firstMsg: true,
   secondMsg: true,
-  messagesPerMinute: 2,
+  messagesPerMinute: 1,
 
   // 👇 AMOUNT SETTINGS
   firstAmount: "0.1",
